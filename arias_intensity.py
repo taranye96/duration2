@@ -18,7 +18,7 @@ def get_arias_intensity(acc, dt):
 
     Args:
         acc (array): array of acceleration values.
-        dt (array): time between each sample (s).
+        dt (float): time between each sample (s).
 
     Returns:
         tuple: arrays of time, Arias Intensity, and normalized Arias
@@ -26,7 +26,7 @@ def get_arias_intensity(acc, dt):
     """
 
     # Arias Intensity
-    g = 980
+    g = 981
     Int = integrate.cumtrapz(acc*acc, dx=dt)
     Ia = Int * np.pi/(2*g)
 
@@ -48,7 +48,7 @@ def get_time_from_percent(NIa, p, dt):
     """
 
     npts = len(NIa)
-    t = np.linspace(0, npts*dt, num=npts)
+    t = np.linspace(0, (npts-1)*dt, num=npts)
 
     time = t[np.argmin(np.abs(p-NIa))]
     return(time)
@@ -86,7 +86,7 @@ def plot_arias_intensity(Ia, NIa, dt):
     """
 
     npts = len(NIa)
-    t = np.linspace(0, npts*dt, num=npts)
+    t = np.linspace(0, (npts-1)*dt, num=npts)
 
     # Plot Arias Intensity
     plt.plot(t, Ia, 'k-')
@@ -116,19 +116,17 @@ def plot_durations_on_NIa(NIa, dt, durations, ax, xlab=True):
     """
 
     npts = len(NIa)
-    t = np.linspace(0, npts*dt, num=npts)
-    xmax = max(t)
+    t = np.linspace(0, (npts-1)*dt, num=npts)
     ax.plot(t, NIa, 'k-')
     if xlab:
         ax.set_xlabel('Time (s)')
     ax.set_ylabel('Norm Arias Intensity (m/s)')
-
     for i in range(len(durations)):
         p1 = durations[i][0]
         p2 = durations[i][1]
         t1 = get_time_from_percent(NIa, p1, dt)
         t2 = get_time_from_percent(NIa, p2, dt)
-        height = (1/4 * i) + 1/4
+        height = (1/(len(durations)+1) * i) + 1/(len(durations)+1)
         ax.plot(t1, p1, 'ok')
         ax.plot(t2, p2, 'ok')
         ax.annotate('', xy=(t2, height), xytext=(t1, height),

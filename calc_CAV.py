@@ -35,7 +35,7 @@ def main():
         channel = trace.stats['channel']
         print(channel)
         dt = trace_stats.delta
-        cav, cav5, cavstd  = CAV.get_CAV(trace.data, dt)
+        cav  = CAV.get_CAV(trace.data, dt)
 
         # print("CAV (%s): %f" % (channel, np.amax(CAV)))
 

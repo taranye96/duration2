@@ -61,8 +61,8 @@ def get_CAV(acc, dt):
     for i in range(n_window):
         w_ind = np.where((t >= window_start[i]) & (t <= window_end[i]))[0]
         pga_i = np.max(np.abs(acc[w_ind]))
-        if pga_i < 2.5:
-            print('window %i is zero-ed out' %i)
+        if pga_i < 25:
+            #print('window %i is zero-ed out' %i)
             acc[w_ind] = 0.0
 
     CAVstd = integrate.trapz(abs(acc), dx=dt)

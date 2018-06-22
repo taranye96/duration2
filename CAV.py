@@ -62,7 +62,7 @@ def get_CAV(acc, dt):
         w_ind = np.where((t >= window_start[i]) & (t <= window_end[i]))[0]
         pga_i = np.max(np.abs(acc[w_ind]))
         if pga_i < 25:
-            #print('window %i is zero-ed out' %i)
+            # print('window %i is zero-ed out' %i)
             acc[w_ind] = 0.0
 
     CAVstd = integrate.trapz(abs(acc), dx=dt)
@@ -74,12 +74,12 @@ def get_CAV(acc, dt):
     return(CAV, CAV5, CAVstd)
 
 
-def plot_CAV(type_CAV, dt):
+def plot_CAV(CAV_type, acc, dt):
     """
     Plots cumulative absolute velocity with respect to time.
 
     Args:
-        type_CAV (array): CAV based on specified threshold.  Options are:
+        type (): CAV based on specified threshold.  Options are:
             "CAV"
             "CAV5"
             "CAVstd"
@@ -88,7 +88,7 @@ def plot_CAV(type_CAV, dt):
         Just the plot
     """
 
-    npts = len(CAV)
+    npts = len(acc)
     t = np.linspace(0, (npts-1)*dt, num=npts)
 
     plt.plot(t, CAV, 'k-')
@@ -96,4 +96,6 @@ def plot_CAV(type_CAV, dt):
     plt.ylabel('CAV')
     plt.show()
     # plt.savefig('Arias_Intensity.png')
+    
+    ######If we want to plot, we ahve to switch from trapz to cumtrapz
     return()

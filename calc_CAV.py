@@ -16,7 +16,7 @@ def main():
 
     # Read acceleration data. If you want velocity units='vel',
     # Cdisplacement units='disp'
-    data_dir = '/Users/tnye/PROJECTS/Duration/data'
+    data_dir = '/Users/tnye/PROJECTS/Duration/data/ci3144585/ground_motion'
     files = ['1994.c.017m30su.n0a',
              '1994.c.017m30su.n0b',
              '1994.c.017m30su.n0c']

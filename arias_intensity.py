@@ -8,6 +8,7 @@ Created on Fri Jun  8 14:15:25 2018
 # third party
 import numpy as np
 from scipy import integrate
+import scipy.constants as sp
 import matplotlib.pyplot as plt
 
 
@@ -26,7 +27,7 @@ def get_arias_intensity(acc, dt):
     """
 
     # Arias Intensity
-    g = 981
+    g = sp.g * 100
     Int = integrate.cumtrapz(acc*acc, dx=dt)
     Ia = Int * np.pi/(2*g)
 
@@ -41,10 +42,12 @@ def get_time_from_percent(NIa, p, dt):
     Get time associated with percent of Arias Intensity.
 
     Args:
-        p (float): Percent (0 to 1) of Arias Intensity.
+        NIa (array): array of normalized Arias Intensity values.
+        p (float): percent (0 to 1) of Arias Intensity.
+        dt (float): time in between each record (s).
 
     Returns:
-        time(float): Time at which p occurs.
+        time(float): duration time to reach specified percent.
     """
 
     npts = len(NIa)
@@ -60,12 +63,14 @@ def get_time_for_duration_parameters(NIa, dt, p1, p2):
     time for the range.
 
     Args:
-        p1
-        p2
+        NIa (array): array of normalized Arias Intensity values.
+        p1 (float): lower boundary of %Arias itensity range.
+        p2 (float): upp boundary of %Arias intensity range.
 
     Returns:
         dur_time(float): Time duration for paramteters.
     """
+
     t1 = get_time_from_percent(NIa, p1, dt)
     t2 = get_time_from_percent(NIa, p2, dt)
 
@@ -78,9 +83,10 @@ def plot_arias_intensity(Ia, NIa, dt):
     Plots Arias intensity and normalized arias intensity
 
     Args:
-        Ia (array): cumulative integral for Arias intensity
-        NIa (array):cumulative integral for normalized Arias intensity
-        dt (float):
+        Ia (array): cumulative integral for Arias intensity.
+        NIa (array): cumulative integral for normalized Arias intensity.
+        dt (float): time in between each record (s).
+
     Returns:
         Nothing....?
     """
@@ -108,10 +114,16 @@ def plot_arias_intensity(Ia, NIa, dt):
 
 
 def plot_durations_on_NIa(NIa, dt, durations, ax, xlab=True):
+
     """
     Plots duration on normalized Arias intensity graph
 
     Args:
+        NIa (array): cumulative integral for normalized Arias intensity.
+        dt (float): time in between each record (s)
+        durations (array): array of duration parameters.
+        ax??
+        xlab??
     Returns:
     """
 

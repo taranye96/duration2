@@ -6,13 +6,17 @@ Created on Fri Jun  8 14:51:54 2018
 @author: tnye
 """
 
-import numpy as np
-from obspy.core.stream import Stream
+# Standard library imports
 import os
 
+# Third party imports
+import numpy as np
+from obspy.core.stream import Stream
+import matplotlib.pyplot as plt
+
+# Local imports
 import processing
 import arias_intensity
-import matplotlib.pyplot as plt
 
 
 def main():
@@ -38,25 +42,30 @@ def main():
                  (0.05, .95)]
 
     # Plots each boundary on the Norm Arias Intensity graph
-    # plt.figure(figsize=(6.5, 2.5))
     f, axes = plt.subplots(len(durations), 1, sharex=True,
                            figsize=(6.5, 7.5))
 
     for i, trace in enumerate(stream):
-        trace_stats = trace.stats
+
+        # Convert acceleration to m/s/s
+        acc = np.multiply(0.01, trace.data)
+
         channel = trace.stats['channel']
-        dt = trace_stats.delta
-        Ia, NIa = arias_intensity.get_arias_intensity(trace.data, dt)
+        dt = trace.stats.delta
+
+        Ia, NIa = arias_intensity.get_arias_intensity(acc, dt, 0)
         print("Arias Intensity (%s): %f" % (channel, np.amax(Ia)))
+
         if i == 2:
             xlab = True
         else:
             xlab = False
-        arias_intensity.plot_durations_on_NIa(NIa, dt, durations,
-                                              axes[i], xlab)
+
+        arias_intensity.plot_durations(NIa, dt, durations, axes[i], xlab)
         axes[i].set_title(channel)
 
-    plt.savefig('Afshari_Fig_1_tnye.png', dpi=300)
+    plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Afshari_Fig_1_tnye.png',
+                dpi=300)
 
 
 if __name__ == "__main__":

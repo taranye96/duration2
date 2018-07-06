@@ -107,9 +107,8 @@ def _read_volume(filename, line_offset):
 
     # Parse name and code information
     name_length = int_data[29]
-    name = re.sub(' +',' ',lines[6][:name_length]).strip().replace(' ', '_')
+    name = re.sub(' +', ' ', lines[6][:name_length]).strip().replace(' ', '_')
     hdr['name'] = name
-    code = re.sub(' +',' ',lines[1][name_length:]).strip().split(' ')[-1][:2]
     hdr['network'] = 'Unknown'
 
     # set statistics
@@ -168,7 +167,7 @@ def _read_volume(filename, line_offset):
         disp_trace = Trace(disp_data.copy(), Stats(disp_hdr.copy()))
         traces += [disp_trace]
         skip_rows += int(disp_rows) + 1
-    new_offset = skip_rows + 1 # there is an 'end of record' line after the data]
+    new_offset = skip_rows + 1  # there is an 'end of record' line after the data]
     return (traces, new_offset)
 
 
@@ -182,8 +181,8 @@ def _read_lines(skip_rows, max_rows, widths, filename):
         array-like: List of comments or array of data.
     """
     data_arr = np.genfromtxt(filename, skip_header=skip_rows,
-            max_rows=max_rows, dtype=np.float64,
-            delimiter=widths).flatten()
+                             max_rows=max_rows, dtype=np.float64,
+                             delimiter=widths).flatten()
     return data_arr
 
 
@@ -198,7 +197,7 @@ def _get_data_format(filename, skip_rows, npts):
         tuple: (int number of rows, list list of widths).
     """
     fmt = np.genfromtxt(filename, skip_header=skip_rows,
-            max_rows=1, dtype=str)[-1]
+                        max_rows=1, dtype=str)[-1]
 
     # Check for a format in header or use default
     if fmt.find('f') >=0 and fmt.find('(') >=0 and fmt.find(')') >=0:

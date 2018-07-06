@@ -5,9 +5,13 @@ Created on Tue Jun 12 13:13:56 2018
 
 @author: tnye
 """
+# Standard library imports
 import os
+
+# Third party imports
 from obspy.core.stream import Stream
 
+# Local imports
 import processing
 import CAV
 
@@ -35,14 +39,7 @@ def main():
         channel = trace.stats['channel']
         print(channel)
         dt = trace_stats.delta
-        cav  = CAV.get_CAV(trace.data, dt)
-
-        # print("CAV (%s): %f" % (channel, np.amax(CAV)))
-
-        # calc_CAV.plot_CAV(type_CAV, dt)
-
-    # plt.savefig('CAV_tnye.png', dpi=300)
-
+        cav = CAV.get_CAV(trace.data, dt, 0)
 
 if __name__ == "__main__":
     main()

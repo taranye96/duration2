@@ -50,13 +50,15 @@ def get_CAV(acc, dt, starttime):
     t_max = np.max(t)
     heavy = Heaviside(acc, 5.0)
 
+    # Choose acceleration values starting at the specificed starttime
+    acc2 = acc[t >= starttime]
+    
     # Calculate CAV.
-    CAV = np.amax(integrate.cumtrapz(np.abs(acc), dx=dt, initial=starttime))
+    CAV = np.amax(integrate.cumtrapz(np.abs(acc2), dx=dt))
 
     # Calculate Cumulative Absolute Velocity for values above 5 cm/s/s.
-    filt_acc = np.multiply(acc, heavy)
-    CAV5 = np.amax(integrate.cumtrapz(np.abs(filt_acc), dx=dt,
-                                      initial=starttime))
+    filt_acc = np.multiply(acc2, heavy)
+    CAV5 = np.amax(integrate.cumtrapz(np.abs(filt_acc), dx=dt))
 
     # Calculate Standardized Cumualte Absolute Velocity.
     window_size = 1.0

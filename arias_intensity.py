@@ -28,9 +28,15 @@ def get_arias_intensity(acc, dt, starttime):
             time. 
     """
 
-    # Calculate Arias intensity
     g = sp.g
-    Int = integrate.cumtrapz(acc*acc, dx=dt, initial=starttime)
+    npts = len(acc)
+    t = np.linspace(0, (npts-1)*dt, num=npts)
+    
+    # Choose acceleration values starting at the specificed starttime
+    acc2 = acc[t >= starttime]
+    
+    # Calculate Arias intensity 
+    Int = integrate.cumtrapz(acc2*acc2, dx=dt)
     Ia = Int * np.pi/(2*g)
 
     # Calculate normalized Arias intensity

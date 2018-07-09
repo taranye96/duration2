@@ -24,8 +24,8 @@ import calc_eq_data
 import arias_intensity
 import CAV
 
-filepath = '/Users/tnye/PROJECTS/Duration/data/usp000g9h6/ground_motion/knt'
-filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000g9h6/ground_motion/knt/knt2008.csv'
+filepath = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt'
+filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt/knt2007.csv'
 
 
 # Read knet data.
@@ -33,7 +33,7 @@ stations, station_stats = read_seismic.get_knet_data(filepath, filt_stns)
 
 # Get source data.
 event_id, date, mag, source_lat, source_lon, depth = calc_eq_data.get_earthquake_data(
-        'usp000g9h6', stations)
+        'usp000fg9t', stations)
 
 # Add distance and P_wave arrival times to stats
 calc_eq_data.get_dist_and_parrivals(stations, station_stats, source_lat,
@@ -97,10 +97,11 @@ ratios = np.array(ratio)
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 plt.scatter(dist, ratios, s=20, c='k')
-plt.yscale('log')
-plt.xscale('log')
+#plt.yscale('log')
+#plt.xscale('log')
+#plt.ylim = 
 plt.ylabel('Arias w P-arriv : Arias')
 plt.xlabel('Dist km')
-plt.title('usp000g9h6')
-plt.show()
-plt.savefig('/Users/tnye/PROJECTS/Duration/data/usp000g9h6/figures/Arias_ratio.png', dpi=300)
+plt.title('usp000fg9t')
+#plt.show()
+plt.savefig('/Users/tnye/PROJECTS/Duration/data/usp000fg9t/figures/Arias_ratio.png', dpi=300)

@@ -12,14 +12,14 @@ from reviewData import reviewData
 from obspy.taup import TauPyModel
 from obspy.geodetics import kilometer2degrees
 
-evlat = 39.030
-evlon = 140.881
-dep = 7.8
-event_time = UTCDateTime(2008, 6, 13, 23, 43, 45)
+evlat = 37.535
+evlon = 138.446
+dep = 12.0
+event_time = UTCDateTime(2007, 7, 16, 1, 13, 22)
 
 model = TauPyModel(model='iasp91')
 
-st = read('/Users/tnye/PROJECTS/Duration/data/usp000g9h6/ground_motion/knt/*.NS')
+st = read('/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt/OSK*.NS')
 
 # Turn station lats into attrib dict
 
@@ -41,7 +41,9 @@ st.sort(['rdist'])
 picktimes = [event_time + tr.stats.ptime for tr in st]
 
 st.detrend('demean')
+
 zp = reviewData.InteractivePlot(st, picktimes=picktimes)
+
 # fig = reviewData.recsec(st, picktimes=picktimes)
 
 

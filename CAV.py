@@ -48,10 +48,12 @@ def get_CAV(acc, dt, starttime):
     npts = len(acc)
     t = np.linspace(0, (npts-1)*dt, npts)
     t_max = np.max(t)
-    heavy = Heaviside(acc, 5.0)
 
     # Choose acceleration values starting at the specificed starttime
     acc2 = acc[t >= starttime]
+
+    # Multiply by heaviside funciton to filter out lower CAV
+    heavy = Heaviside(acc2, 5.0)
     
     # Calculate CAV.
     CAV = np.amax(integrate.cumtrapz(np.abs(acc2), dx=dt))

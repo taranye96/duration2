@@ -36,8 +36,11 @@ mag = df['magnitude']
 Vs30 = df['Vs30(m/s)']
 
 # Predict Ia using Liu GMPE
-Liu_Ia = gmpe.get_Liu_array(pga_max, mag, Vs30)
+Liu_Ia, Sig, Tau, Sig_t = gmpe.get_Liu_array(pga_max, mag, Vs30)
 
 # Add column for Liu predictions to data frame
 df['Liu_Ia'] = Liu_Ia
+df['Liu_Sig'] = Sig[0]
+df['Liu_Tau'] = Tau[0]
+df['Liu_Sig_t'] = Sig_t[0]
 df.to_csv('/Users/tnye/PROJECTS/Duration/data/add_Liu.csv')

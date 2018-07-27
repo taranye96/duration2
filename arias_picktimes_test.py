@@ -7,12 +7,10 @@ Created on Fri Jul  6 11:03:22 2018
 """
 
 # Standard library imports
-import math
 import os 
 
 # Third party imports
 import numpy as np
-import pandas as pd
 from obspy.core.stream import Stream
 import matplotlib.pyplot as plt
 
@@ -22,7 +20,6 @@ os.chdir('/Users/tnye/PROJECTS/Duration/code')
 import read_seismic
 import calc_eq_data
 import arias_intensity
-import CAV
 
 filepath = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt'
 filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt/knt2007.csv'

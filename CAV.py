@@ -48,9 +48,11 @@ def get_CAV(acc, dt, starttime):
     npts = len(acc)
     t = np.linspace(0, (npts-1)*dt, npts)
     t_max = np.max(t)
+    
+    acctest = np.array(acc)
 
     # Choose acceleration values starting at the specificed starttime
-    acc2 = acc[t >= starttime]
+    acc2 = acctest[t >= starttime]
 
     # Multiply by heaviside funciton to filter out lower CAV
     heavy = Heaviside(acc2, 5.0)
@@ -62,18 +64,18 @@ def get_CAV(acc, dt, starttime):
     filt_acc = np.multiply(acc2, heavy)
     CAV5 = np.amax(integrate.cumtrapz(np.abs(filt_acc), dx=dt))
 
-    # Calculate Standardized Cumualte Absolute Velocity.
+    # Calculate Standardized Cumulative Absolute Velocity.
     window_size = 1.0
-    window_start = np.arange(starttime, t_max, window_size)
+    window_start = np.arange(0, t_max, window_size)
     window_end = window_start + window_size
     n_window = len(window_start)
     for i in range(n_window):
         w_ind = np.where((t >= window_start[i]) & (t <= window_end[i]))[0]
-        pga_i = np.max(np.abs(acc[w_ind]))
+        pga_i = np.max(np.abs(acc2[w_ind]))
         if pga_i < 25:
-            acc[w_ind] = 0.0
+            acc2[w_ind] = 0.0
 
-    CAVstd = integrate.trapz(abs(acc), dx=dt)
+    CAVstd = integrate.trapz(abs(acc2), dx=dt)
 
     #print("CAV5:", CAV5)
     #print("CAVstd:", CAVstd)

@@ -6,16 +6,21 @@ Created on Fri Jun 22 11:24:53 2018
 @author: tnye
 """
 
-from obspy import read
-import processing
-from amptools.stream import group_channels
-# from matplotlib.pyplot import close
-import pandas as pd
+# Standard library imports
 import glob
 import os
 
+# Third party imports
+from obspy import read
+from amptools.stream import group_channels
+import pandas as pd
 
-def get_knet_data(filepath, filtered_stations):
+# Local imports
+import processing
+
+
+
+def get_knt_data(filepath, filtered_stations):
     """
     Reads a knet file for an earthquake with horizontal and vertical components
     of acceleration, gathers it into 1 stream per station, and give station
@@ -46,7 +51,7 @@ def get_knet_data(filepath, filtered_stations):
 
     # Filter out stations with poor records using a dataframe of pre-selected
     # station names
-    names = pd.read_csv(filtered_stations)
+    names = pd.read_csv(filtered_stations, usecols=(['X']), sep=",")
     names_list = names.to_string(index=False)
     filtered_files = []
     for st in data:
@@ -59,10 +64,13 @@ def get_knet_data(filepath, filtered_stations):
     stations = group_channels(filtered_files)
 
     # Obtain stats for each station using the stats from the first trace
+        # Also add station type to stats 
+        # (read does not distinguish between knet and kik)
     station_stats = []
     for sta in stations:
         for i in range(len(sta)):
             trace = sta[0]
+            trace.stats.type = 'Knet'
             name = trace.stats['station']
             station_lat = trace.stats['knet']['stla']
             station_lon = trace.stats['knet']['stlo']
@@ -88,7 +96,7 @@ def get_knet_data(filepath, filtered_stations):
     return (stations, station_stats)
 
 
-def get_kik_data(filepath):
+def get_kik_data(filepath, filtered_stations):
     """
     Reads a kik file for an earthquake with above surface horizontal and
     vertical components of acceleration, gathers it into 1 stream per station,
@@ -96,6 +104,8 @@ def get_kik_data(filepath):
 
     Args:
         filepath (str): Absolute filepath to the earthquake data
+        kik_profiles (str): Absolute filepath to kik-profiles.
+        filtered_stations (csv): Csv of names of usable stations for the event.
 
     Returns:
         stations (array): Combined streams of acceleration data for
@@ -103,7 +113,11 @@ def get_kik_data(filepath):
         station_stats (list): Name, lat, and lon coordinates for each station.
     """
 
-    # Obtain only the acceleration files.
+    # Create string of all the stations with usable data
+    names = pd.read_csv(filtered_stations, usecols=(['X']), sep=",")
+    names_list = names.to_string(index=False)
+    
+    # Obtain only the acceleration files from all of the event records.
     # .EW and .NS are horizontal components and .UD is the vertical component.
     os.chdir(filepath)
     types = ('*.EW2', '*.NS2', '*.UD2')
@@ -111,18 +125,30 @@ def get_kik_data(filepath):
     for files in types:
         files_grabbed.extend(glob.glob(files))
 
+    # Read files using Obspy
     data = []
     for i in range(len(files_grabbed)):
         data.append(read(files_grabbed[i]))
 
+    # Select only stations that have usable data AND a kik-profile
+    filtered_files = []
+    for sta in data:
+        for i in range(len(sta)):
+            trace = sta[i]
+            if trace.stats.station in names_list:
+                filtered_files.append([trace])
+
     # Group all acceleration files by station.
-    stations = group_channels(data)
+    stations = group_channels(filtered_files)
 
     # Obtain stats for each station using the stats from the first trace
+        # Also add station type to stats 
+        # (read does not distinguish between knet and kik)
     station_stats = []
     for sta in stations:
         for i in range(len(sta)):
             trace = sta[0]
+            trace.stats.type = 'KIKnet'
             name = trace.stats['station']
             station_lat = trace.stats['knet']['stla']
             station_lon = trace.stats['knet']['stlo']

@@ -1,4 +1,4 @@
- a#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jun 27 14:11:52 2018
@@ -12,14 +12,14 @@ from reviewData import reviewData
 from obspy.taup import TauPyModel
 from obspy.geodetics import kilometer2degrees
 
-evlat = 37.535
-evlon = 138.446
-dep = 12.0
-event_time = UTCDateTime(2007, 7, 16, 1, 13, 22)
+evlat =  35.512
+evlon = 140.408
+dep = 33
+event_time = UTCDateTime(2005, 7, 17, 10, 51, 0)
 
 model = TauPyModel(model='iasp91')
 
-st = read('/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt/OSK*.NS')
+st = read('/Users/tnye/PROJECTS/Duration/data/small_quake/knt/*.NS')
 
 # Turn station lats into attrib dict
 
@@ -42,7 +42,7 @@ picktimes = [event_time + tr.stats.ptime for tr in st]
 
 st.detrend('demean')
 
-zp = reviewData.InteractivePlot(st, picktimes=picktimes)
+zp = reviewData.InteractivePlot(st, picktimes=None)
 
 # fig = reviewData.recsec(st, picktimes=picktimes)
 

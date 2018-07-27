@@ -10,12 +10,20 @@ import pandas as pd
 from collections import OrderedDict
 
 data = OrderedDict([('USGS_eventID', []), ('magnitude', []), ('depth(km)', []),
-                    ('source_lat', []), ('source_lon', []),
-                    ('station_name', []), ('elev(m)', []), ('station_lat', []),
-                    ('station_lon', []), ('rdist(km)', []), ('rake_angle', []),
-                    ('fault_type', []), ('Ia', []), ('CAV', []), ('CAV5', []),
-                    ('CAVstd', []), ('Vs30', []), ('PGA', []), ('PGV', [])])
+                    ('rake_angle', []), ('source_lat', []), ('source_lon', []),
+                    ('station_name', []), ('station_type', []),
+                    ('station_lat', []), ('station_lon', []),
+                    ('ep_dist(km)', []), ('fault_dist(km)', []),
+                    ('Vs30(m/s)', []), ('PGA_arith(cm/s/s)', []),
+                    ('PGA_max(cm/s/s)', []), ('Ia_arith(m/s)', []),
+                    ('Ia_geom(m/s)', []), ('Ia_max(m/s)', []),
+                    ('CAV_arith(cm/s)', []), ('CAV_geom(cm/s)', []),
+                    ('CAV_max(cm/s)', []), ('CAV5_arith(cm/s)', []),
+                    ('CAV5_geom(cm/s)', []), ('CAV5_max(cm/s)', []),
+                    ('CAVstd_arith(cm/s)', []), ('CAVstd_geom(cm/s)', []),
+                    ('CAVstd_max(cm/s)', [])])
 
 df = pd.DataFrame(data)
 
-df.to_csv('duration_data.csv', index=False)
+filepath = '/Users/tnye/PROJECTS/Duration/data/duration_data.csv'
+df.to_csv(filepath, index=False)

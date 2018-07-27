@@ -7,178 +7,165 @@ Created on Fri Jun 22 14:05:13 2018
 """
 
 # Standard library imports
-import math
 import os
+os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Third party imports
-import numpy as np
 import pandas as pd
-
-os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Local imports
 import read_seismic
 import calc_eq_data
-import arias_intensity
-import CAV
+import pga
+import rot_components
+import Vs30
+
+events = ['usp000a1b0', 'usp000d6vk', 'usp000fg9t', 'usp000g9h6']
+types = ['knt', 'kik']
+
+profile_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/kik_profiles/'
+knet_Vs30 = '/Users/tnye/PROJECTS/Duration/data/Vs30/knet_xtrap.csv'
+vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/japan_map/geo_vs30'
+
+for event in events:
+    for stn_type in types:
+
+        filepath = os.path.join('/Users/tnye/PROJECTS/Duration/data/events',
+                                event, 'ground_motion', stn_type)
+        filt_stns = os.path.join('/Users/tnye/PROJECTS/Duration/data/events',
+                                 event, 'select_stations', stn_type + '.csv')
+
+        # Read knet data.
+        if stn_type == 'knt':
+            stations, station_stats = read_seismic.get_knt_data(filepath, filt_stns)
+        else:
+            stations, station_stats = read_seismic.get_kik_data(filepath, filt_stns)
+
+        # Get source data.
+        event_id, date, mag, source_lat, source_lon, depth, rake = calc_eq_data.get_earthquake_data(
+                event, stations)
+
+        # Add distance and P_wave arrival times to stats
+        calc_eq_data.get_dist_and_parrivals(stations, station_stats, depth)
+
+        # Add data to csv
+        event_ids = []
+        mags = []
+        depths = []
+        rake_angles = []
+        source_lats = []
+        source_lons = []
+
+        station_names = []
+        station_types = []
+        station_lats = []
+        station_lons = []
+        distances = []
+        PGA_arith = []
+        PGA_max = []
+        Ia_geom = []
+        Ia_arith = []
+        Ia_max = []
+        CAV_geom = []
+        CAV_arith = []
+        CAV_max = []
+        CAV5_geom = []
+        CAV5_arith = []
+        CAV5_max = []
+        CAVstd_geom = []
+        CAVstd_arith = []
+        CAVstd_max = []
 
 
-filepath = '/Users/tnye/PROJECTS/Duration/data/usp000g9h6/ground_motion/knt'
-filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000g9h6/select_stations/knt.csv'
+        for sta in stations:
+            event_id = sta[0].stats['eventID']
+            mag = sta[0].stats['mag']
+            depth = sta[0].stats['source_depth']
+            rake = sta[0].stats['rake']
+            source_lat = sta[0].stats['source_lat']
+            source_lon = sta[0].stats['source_lon']
+            station_name = sta[0].stats['station']
+            station_type = sta[0].stats['type']
+            station_lat = sta[0].stats['knet']['stla']
+            station_lon = sta[0].stats['knet']['stlo']
+            distance = sta[0].stats['distkm']
+            event_ids.append(event_id)
+            mags.append(mag)
+            depths.append(depth)
+            rake_angles.append(rake)
+            source_lats.append(source_lat)
+            source_lons.append(source_lon)
+            station_names.append(station_name)
+            station_types.append(station_type)
+            station_lats.append(station_lat)
+            station_lons.append(station_lon)
+            distances.append(distance)
+    
+            # PGA
+            pga_arith, pga_max = pga.get_horizontal_pga(sta[0].data,
+                                                        sta[2].data)
+            PGA_arith.append(pga_arith)
+            PGA_max.append(pga_max)
+
+            # Rotation-independent components
+            dt = sta[0].stats.delta
+            ia_geom, ia_arith, ia_max = rot_components.get_RotComp_Arias(sta, dt, 0)
+            Ia_geom.append(ia_geom)
+            Ia_arith.append(ia_arith)
+            Ia_max.append(ia_max)
+
+            (cav_geom, cav5_geom, cavstd_geom,
+             cav_arith, cav5_arith, cavstd_arith,
+             cav_max, cav5_max,
+             cavstd_max) = rot_components.get_RotComp_CAV(sta, dt, 0)
+            CAV_geom.append(cav_geom)
+            CAV5_geom.append(cav5_geom)
+            CAVstd_geom.append(cavstd_geom)
+            CAV_arith.append(cav_arith)
+            CAV5_arith.append(cav5_arith)
+            CAVstd_arith.append(cavstd_arith)
+            CAV_max.append(cav_max)
+            CAV5_max.append(cav5_max)
+            CAVstd_max.append(cavstd_max)
 
 
-# Read knet data.
-stations, station_stats = read_seismic.get_knet_data(filepath, filt_stns)
 
-# Get source data.
-event_id, date, mag, source_lat, source_lon, depth = calc_eq_data.get_earthquake_data(
-        'usp000g9h6', stations)
-
-# Add distance and P_wave arrival times to stats
-calc_eq_data.get_dist_and_parrivals(stations, station_stats, source_lat,
-                                    source_lon, depth)
-
-# Get avg Arias intensity for horizontal components.
-for sta in stations:
-    for i in range(len(sta)):
-        trace = sta[i]
-        acc = np.multiply(0.01, trace.data)
-        Ia, NIa, = arias_intensity.get_arias_intensity(acc,
-                                                       trace.stats['delta'],
-                                                       trace.stats.P_arriv)
-        trace.stats.Ia = np.amax(Ia)
+        # Vs30
+        if stations[0][0].stats['type'] == 'Knet':
+            vs30, special_files = Vs30.knet_Vs30(stations, knet_Vs30, vs30_path)
+        else:
+            vs30, special_files = Vs30.kik_Vs30(stations, profile_path, vs30_path)
 
 
-# Get avg CAV for horizontal components.
-for sta in stations:
-    for i in range(len(sta)):
-        trace = sta[i]
-        cav, cav5, cavstd = CAV.get_CAV(trace.data, trace.stats['delta'],
-                                        trace.stats.P_arriv)
-        trace.stats.CAV = np.amax(cav)
-        trace.stats.CAV5 = np.amax(cav5)
-        trace.stats.CAVstd = np.amax(cavstd)
+        data = {'USGS_eventID': event_ids, 'magnitude': mags, 'depth(km)': depths,
+                'rake_angle': rake_angles, 'source_lat': source_lats,
+                'source_lon': source_lons, 'station_name': station_names,
+                'station_type': station_types, 'station_lat': station_lats,
+                'station_lon': station_lons, 'ep_dist(km)': distances,
+                'Vs30(m/s)': vs30, 'PGA_arith(cm/s/s)': PGA_arith,
+                'PGA_max(cm/s/s)': PGA_max, 'Ia_geom(m/s)': Ia_geom,
+                'Ia_arith(m/s)': Ia_arith, 'Ia_max(m/s)': Ia_max,
+                'CAV_geom(cm/s)': CAV_geom, 'CAV_arith(cm/s)': CAV_arith,
+                'CAV_max(cm/s)': CAV_max, 'CAV5_geom(cm/s)': CAV5_geom,
+                'CAV5_arith(cm/s)': CAV5_arith, 'CAV5_max(cm/s)': CAV5_max,
+                'CAVstd_geom(cm/s)': CAVstd_geom,
+                'CAVstd_arith(cm/s)': CAVstd_arith,
+                'CAVstd_max(cm/s)': CAVstd_max}
 
+        filename = '/Users/tnye/PROJECTS/Duration/data/duration_data.csv'
+        df = pd.read_csv(filename)
 
-# Add data to csv
-event_ids = []
-mags = []
-depths = []
-source_lats = []
-source_lons = []
-station_names = []
-elevations = []
-station_lats = []
-station_lons = []
-distances = []
-Ia_geom = []
-Ia_arith = []
-CAV_geom = []
-CAV_arith = []
-CAV5_geom = []
-CAV5_arith = []
-CAVstd_geom = []
-CAVstd_arith = []
-
-for i in range(len(stations)):
-        event_id = stations[i][0].stats['eventID']
-        mag = stations[i][0].stats['mag']
-        depth = stations[i][0].stats['source_depth']
-        source_lat = stations[i][0].stats['source_lat']
-        source_lon = stations[i][0].stats['source_lon']
-        station_name = stations[i][0].stats['station']
-        elevation = stations[i][0].stats['knet']['stel']
-        station_lat = stations[i][0].stats['knet']['stla']
-        station_lon = stations[i][0].stats['knet']['stlo']
-        distance = stations[i][0].stats['distkm']
-
-        # Geometric mean
-        ia_geom = (math.sqrt(stations[i][0].stats['Ia'] *
-                             stations[i][2].stats['Ia']))
-        cav_geom = (math.sqrt(stations[i][0].stats['CAV'] *
-                              stations[i][2].stats['CAV']))
-        cav5_geom = (math.sqrt(stations[i][0].stats['CAV5'] *
-                               stations[i][2].stats['CAV5']))
-        cavstd_geom = (math.sqrt(stations[i][0].stats['CAVstd'] *
-                                 stations[i][2].stats['CAVstd']))
+        dfnew = pd.DataFrame(data)
+        dfconcat = pd.concat([df, dfnew], sort=True)
         
-        # Arithmetic mean
-        ia_arith = ((stations[i][0].stats['Ia'] +
-                     stations[i][2].stats['Ia']) / 2)
-        cav_arith = ((stations[i][0].stats['CAV'] +
-                      stations[i][2].stats['CAV']) / 2)
-        cav5_arith = ((stations[i][0].stats['CAV5'] +
-                       stations[i][2].stats['CAV5']) / 2)
-        cavstd_arith = ((stations[i][0].stats['CAVstd'] +
-                         stations[i][2].stats['CAVstd']) / 2)
-
-        event_ids.append(event_id)
-        mags.append(mag)
-        depths.append(depth)
-        source_lats.append(source_lat)
-        source_lons.append(source_lon)
-        station_names.append(station_name)
-        elevations.append(elevation)
-        station_lats.append(station_lat)
-        station_lons.append(station_lon)
-        distances.append(distance)
-        Ia_geom.append(ia_geom)
-        Ia_arith.append(ia_arith)
-        CAV_geom.append(cav_geom)
-        CAV_arith.append(cav_arith)
-        CAV5_geom.append(cav5_geom)
-        CAV5_arith.append(cav5_arith)
-        CAVstd_geom.append(cavstd_geom)
-        CAVstd_arith.append(cavstd_arith)
-
-# Max horizontal component 
-Ia_max = []
-CAV_max = []
-CAV5_max = []
-CAVstd_max = []
-for sta in stations:
-    if sta[0].stats.Ia > sta[2].stats.Ia:
-        Ia_max.append(sta[0].stats.Ia)
-    else:
-        Ia_max.append(sta[2].stats.Ia)
-
-    if sta[0].stats.CAV > sta[2].stats.CAV:
-        CAV_max.append(sta[0].stats.CAV)
-    else:
-        CAV_max.append(sta[2].stats.CAV)
-
-    if sta[0].stats.CAV5 > sta[2].stats.CAV5:
-        CAV5_max.append(sta[0].stats.CAV5)
-    else:
-        CAV5_max.append(sta[2].stats.CAV5)
-
-    if sta[0].stats.CAVstd > sta[2].stats.CAVstd:
-        CAVstd_max.append(sta[0].stats.CAVstd)
-    else:
-        CAVstd_max.append(sta[2].stats.CAVstd)
-
-data = {'USGS_eventID': event_ids, 'magnitude': mags, 'depth(km)': depths,
-        'source_lat': source_lats, 'source_lon': source_lons,
-        'station_name': station_names, 'elev': elevations,
-        'station_lat': station_lats, 'station_lon': station_lons,
-        'rdist(km)': distances, 'Ia_geom': Ia_geom, 'Ia_arith': Ia_arith, 
-        'Ia_max': Ia_max, 'CAV_geom': CAV_geom, 'CAV_arith': CAV_arith,
-        'CAV_max': CAV_max, 'CAV5_geom': CAV5_geom, 'CAV5_arith': CAV5_arith,
-        'CAV5_max': CAV5_max, 'CAVstd_geom': CAVstd_geom,
-        'CAVstd_arith': CAVstd_arith, 'CAVstd_max': CAVstd_max}
-
-filename = '/Users/tnye/PROJECTS/Duration/code/duration_data.csv'
-df = pd.read_csv(filename)
-
-dfnew = pd.DataFrame(data)
-dfconcat = pd.concat([df, dfnew], sort=True)
-
-columns = ['USGS_eventID', 'magnitude', 'depth(km)',
-           'source_lat', 'source_lon',
-           'station_name', 'elev(m)', 'station_lat',
-           'station_lon', 'rdist(km)', 'rake_angle',
-           'fault_type', 'Ia_geom', 'Ia_arith', 'Ia_max', 'CAV_geom',
-           'CAV_arith', 'CAV_max', 'CAV5_geom', 'CAV5_arith', 'CAV5_max',
-           'CAVstd_geom', 'CAVstd_arith', 'CAVstd_max', ' Vs30', 'PGA', 'PGV']
-
-dfconcat.to_csv(filename, index=False, columns=columns)
+        columns = ['USGS_eventID', 'magnitude', 'depth(km)', 'rake_angle',
+                   'source_lat', 'source_lon', 'station_name', 'station_type',
+                   'station_lat', 'station_lon', 'ep_dist(km)', 'fault_dist(km)',
+                   'Vs30(m/s)', 'PGA_arith(cm/s/s)', 'PGA_max(cm/s/s)',
+                   'Ia_geom(m/s)', 'Ia_arith(m/s)', 'Ia_max(m/s)',
+                   'CAV_geom(cm/s)', 'CAV_arith(cm/s)', 'CAV_max(cm/s)',
+                   'CAV5_geom(cm/s)', 'CAV5_arith(cm/s)', 'CAV5_max(cm/s)',
+                   'CAVstd_geom(cm/s)', 'CAVstd_arith(cm/s)',
+                   'CAVstd_max(cm/s)']
+        
+        dfconcat.to_csv(filename, index=False, columns=columns)

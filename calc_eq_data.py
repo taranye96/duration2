@@ -6,6 +6,7 @@ Created on Thu Jun 28 11:52:15 2018
 @author: tnye
 """
 
+# Third party imports
 from libcomcat.search import get_event_by_id
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.taup import TauPyModel
@@ -50,18 +51,32 @@ def get_earthquake_data(event_id, stations):
             source_depth = depth
             event_lat = source_lat
             event_lon = source_lon
+            if detail.hasProduct('moment-tensor'):
+                tensor = detail.getProducts('moment-tensor')[0]
+                if tensor.hasProperty('nodal-plane-1-rake'):
+                    rake = float(tensor['nodal-plane-1-rake'])
+                    if rake > 180 and rake < 360:
+                        rake = rake - 360
+                elif tensor.hasProperty('nodal-plane-1-slip'):
+                    rake = float(tensor['nodal-plane-1-slip'])
+                    if rake > 180 and rake < 360:
+                        rake = rake - 360
+                else:
+                    rake = 'Nan'
+            else:
+                rake = 'Nan'
 
             trace.stats.eventID = eventID
             trace.stats.mag = magnitude
             trace.stats.source_depth = source_depth
             trace.stats.source_lat = event_lat
             trace.stats.source_lon = event_lon
+            trace.stats.rake = rake
 
-    return (event_id, date, mag, source_lat, source_lon, depth)
+    return (event_id, date, mag, source_lat, source_lon, depth, rake)
 
 
-def get_dist_and_parrivals(stations, station_stats, source_lat, source_lon,
-                           depth):
+def get_dist_and_parrivals(stations, station_stats, depth):
     """
     Calculate distance between the source and each station for an event and
     the theoretical p-wave arrival times and appends them to the station stats.
@@ -70,8 +85,6 @@ def get_dist_and_parrivals(stations, station_stats, source_lat, source_lon,
         stations (array): Combined streams of acceleration data for
             each station.
         station_stats (list): List of lat and lon coordinates for event.
-        source_lat (float): Source latitude.
-        source_lon (float): Source longitude.
         depth (float): Depth of earthquake origin in km.
 
     Returns:
@@ -86,7 +99,8 @@ def get_dist_and_parrivals(stations, station_stats, source_lat, source_lon,
             dist_az_baz = gps2dist_azimuth(
                     trace.stats['knet']['stla'],
                     trace.stats['knet']['stlo'],
-                    source_lat, source_lon)
+                    trace.stats['knet']['evla'],
+                    trace.stats['knet']['evlo'])
             distance_meters = dist_az_baz[0]
             distance_km = distance_meters/1000.0
             dd = kilometers2degrees(distance_km)

@@ -8,7 +8,7 @@ Created on Fri Jul 27 14:22:22 2018
 
 # Main imports for calculation
 import numpy as np
-from openquake.hazardlib.gsim.travasarou_2003 import BooreEtAl2014
+from openquake.hazardlib.gsim.travasarou_2003 import TravasarouEtAl2003
 from openquake.hazardlib.imt import IA
 from openquake.hazardlib.gsim.base import SitesContext
 from openquake.hazardlib.gsim.base import DistancesContext
@@ -17,7 +17,7 @@ from openquake.hazardlib import const
 from openquake.hazardlib.gsim.base import GMPE, CoeffsTable
 
 # Stuff for plotting
-%matplotlib inline
+#%matplotlib inline
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("ticks")

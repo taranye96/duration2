@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jul 31 13:13:25 2018
+Created on Tue Jul 31 15:21:19 2018
 
 @author: tnye
 """
@@ -47,46 +47,57 @@ sns.set_style("ticks",
 
 
 # Create list of PGA values
-rdist = np.logspace(0, 2, 250)
+rdist = np.linspace(1, 100, 250)
 
 # Define variables
-vs30 = np.full_like(rdist, 360)
-rake = np.full_like(rdist, 180)
+vs30_1 = 180
+vs30_2 = 360
+vs30_3 = 760
+vs30_4 = 1100
 
-# Define Magnitudes
-mag_1 = np.full_like(rdist, 5.5)
-mag_2 = np.full_like(rdist, 6.5)
-mag_3 = np.full_like(rdist, 7.5)
+rake = 180
+mag = 6
 
 # Create list of Arias intensity values 
-#Ia_1 = []
-#Ia_2 = []
-#Ia_3 = []
+Ia_1 = []
+Ia_2 = []
+Ia_3 = []
+Ia_4 = []
+refIa = []
 
-Ia1, refIa1 = gmpe.get_FoulserPiggott(mag_1, vs30, rake, rdist)
-Ia2, refIa2 = gmpe.get_FoulserPiggott(mag_2, vs30, rake, rdist)
-Ia3, refIa3 = gmpe.get_FoulserPiggott(mag_3, vs30, rake, rdist)
+for i in range(len(rdist)):
+    Ia1 = gmpe.get_FoulserPiggott_single(mag, vs30_1, rake, rdist[i])
+    Ia2 = gmpe.get_FoulserPiggott_single(mag, vs30_2, rake, rdist[i])
+    Ia3 = gmpe.get_FoulserPiggott_single(mag, vs30_3, rake, rdist[i])
+    Ia4 = gmpe.get_FoulserPiggott_single(mag, vs30_4, rake, rdist[i])
 
-#    Ia_1.append(Ia1[0])
-#    Ia_2.append(Ia2[0])
-#    Ia_3.append(Ia3[0])
+    Ia_1.append(Ia1[0])
+    Ia_2.append(Ia2[0])
+    Ia_3.append(Ia3[0])
+    Ia_4.append(Ia4[0])
+    refIa.append(Ia4[1])
+
+Amp_Ia1 = np.divide(Ia_1, Ia_4)
+Amp_Ia2 = np.divide(Ia_2, Ia_4)
+Amp_Ia3 = np.divide(Ia_3, Ia_4)
+
  
 # Plot figure
 fig = plt.figure(figsize=(10,8))
 ax = fig.add_subplot(111)
 ax.set_yscale('log')
 ax.set_xscale('log')
-ax.plot(rdist, Ia1, 'k-', label='Magnitude=5.5')
-ax.plot(rdist, Ia2, 'r-', label='Magnitude=6.5')
-ax.plot(rdist, Ia3, 'g-', label='Magnitude=7.5')
+ax.plot(refIa, Amp_Ia1, 'k-', label='180')
+ax.plot(refIa, Amp_Ia2, 'r-', label='360')
+ax.plot(refIa, Amp_Ia3, 'g-', label='760')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
 ax.legend()
-ax.set_xlim(1, 100)
+#ax.set_xlim(1, 100)
 ax.set_ylim(0.001, 10)
-ax.set_ylabel('Arias Intensity (m/s)')
-ax.set_xlabel('Rrup(km)')
-ax.set_title('Foulser-Piggott Predictions')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/FP_fig9_360.png', dpi=300)
+ax.set_ylabel('Ia(Vs30) / Ia(Vs30=1100)')
+ax.set_xlabel('Reference Ia')
+#ax.set_title('Foulser-Piggott Predictions')
+#plt.savefig('/Users/tnye/PROJECTS/Duration/figures/FP_fig9_360.png', dpi=300)
     
  

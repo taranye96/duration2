@@ -46,6 +46,7 @@ pga = pga * 0.01 # convert to m/s
 pga = pga / sp.g # convert to g
 mag = df['magnitude']
 Vs30 = df['Vs30(m/s)']
+rrup = df['rrup']
 
 # Obtain Arias intensity observations 
 Ia_obs = df['Ia_arith(m/s)']
@@ -73,7 +74,7 @@ ax.set_xlim((10**-4), 2)
 ax.set_ylim(-1, 1)
 ax.set_ylabel('Residuals')
 ax.set_xlabel('PGA(g)')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_intra_residuals_pga.png', dpi=300)
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_residuals_pga.png', dpi=300)
 
 # Vs30
 fig = plt.figure(figsize=(5,4))
@@ -82,24 +83,23 @@ ax.set_xscale('log')
 ax.plot(Vs30, residuals, 'ko')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
-#ax.set_xlim(10E2, 20E3)
 ax.set_ylim(-1, 1)
 ax.set_ylabel('Residuals')
 ax.set_xlabel('Vs30(m/s)')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_intra_residuals_vs30.png', dpi=300)
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_residuals_vs30.png', dpi=300)
 
-# Magnitude
+# Rupture Distance
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
-ax.set_xscale('log')
-ax.plot(mag, residuals, 'ko')
+#ax.set_xscale('log')
+ax.plot(rrup, residuals, 'ko')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
-#ax.set_xlim((10**-2), (10**0))
+#ax.set_xlim(1, 600)
 ax.set_ylim(-1, 1)
 ax.set_ylabel('Residuals')
-ax.set_xlabel('Magnitude')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_intra_residuals_mag.png', dpi=300)
+ax.set_xlabel('Rrup')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_residuals_rrup.png', dpi=300)
 
 
 

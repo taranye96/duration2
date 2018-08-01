@@ -81,7 +81,7 @@ def get_Liu_single(PGA, mag, Vs30):
     return(Liu_Ia_mean)
 
 
-def get_FoulserPiggott_array(mag, Vs30, rake, rrup):
+def get_FoulserPiggott(mag, Vs30, rake, rrup, heteroskedastic=True):
     """
     Calculates Arias intensity for horizontal components using the
     Foulser-Piggott GMPE.
@@ -91,6 +91,7 @@ def get_FoulserPiggott_array(mag, Vs30, rake, rrup):
         Vs30 (array): Array of Vs30 values (m/s). 
         rake (array): Array of rake angles. 
         rrup (array): Array of rupture distances (km). 
+        heteroskedastic (bool): Use heteroskedastic coefficients?
          
     Returns:
         
@@ -98,27 +99,50 @@ def get_FoulserPiggott_array(mag, Vs30, rake, rrup):
     """
 
     # GMPE coefficients
-    c1 = 4.9862
-    c2 = -0.1939
-    c3 = -4.0332
-    c4 = 0.2887
-    c5 = 6.3049
-    c6 = 0.3507
-    v1 = -1.1576
-    v2 = -0.4576
-    v3 = -0.0029
-    v4 = 0.0818
-
-    # Sigma constants
-    d1 = -0.5921
-    d2 = 3.8311
-    d3 = 4.0762
-    sigE = 0.6556
-    sigA = 0.5978
-
-    # Constants??
-    Vref = 1100
-    V1 = 280
+    if heteroskedastic:
+        c1 = 4.9862
+        c2 = -0.1939
+        c3 = -4.0332
+        c4 = 0.2887
+        c5 = 6.3049
+        c6 = 0.3507
+        v1 = -1.1576
+        v2 = -0.4576
+        v3 = -0.0029
+        v4 = 0.0818
+    
+        # Sigma constants
+        d1 = -0.5921
+        d2 = 3.8311
+        d3 = 4.0762
+        sigE = 0.6556
+        sigA = 0.5978
+    
+        # Constants??
+        Vref = 1100
+        V1 = 280
+    else:
+        c1 = 5.1961
+        c2 = -0.2371
+        c3 = -3.6561
+        c4 = 0.2309
+        c5 = 5.4651
+        c6 = 0.3186
+        v1 = -1.1335
+        v2 = -0.6519
+        v3 = -0.0022
+        v4 = 0.1327
+    
+        # Sigma constants
+        d1 = np.nan
+        d2 = np.nan
+        d3 = np.nan
+        sigE = 0.6812
+        sigA = 0.8975
+    
+        # Constants??
+        Vref = 1100
+        V1 = 280
 
     # Calculate Ia mean
     FP_Ia_mean = []
@@ -129,15 +153,22 @@ def get_FoulserPiggott_array(mag, Vs30, rake, rrup):
         else:
             FRV = 0
 
-        lnIa_ref = c1 + (c2 * (8.5 - mag[i])**2) + ((c3 + (c4 * mag[i])) *
-                     math.log(math.sqrt(rrup[i]**2 + c5**2))) + (c6 * FRV)
+        lnIa_ref = \
+            c1 + \
+            (c2 * (8.5 - mag[i])**2) + \
+            ((c3 + (c4 * mag[i])) *
+                np.log(np.sqrt(rrup[i]**2 + c5**2))) + \
+            (c6 * FRV)
         
-        Ia_ref = math.exp(lnIa_ref)
+        Ia_ref = np.exp(lnIa_ref)
         refIa.append(Ia_ref)
 
-        f_site = ((v1 * math.log(Vs30[i]/Vref)) + (v2 * (math.exp(v3 * (min(Vs30[i], 1100) - v1)) - math.exp(v3 * (Vref - V1))) * math.log((Ia_ref + v4) / v4)))
+        f_site = ((v1 * np.log(Vs30[i]/Vref)) + 
+                  (v2 * (np.exp(v3 * (min(Vs30[i], 1100) - v1)) - 
+                         np.exp(v3 * (Vref - V1))) * 
+                   np.log((Ia_ref + v4) / v4)))
 
-        Ia = math.exp(lnIa_ref + f_site)
+        Ia = np.exp(lnIa_ref + f_site)
         FP_Ia_mean.append(Ia)
 
     return(FP_Ia_mean, refIa)

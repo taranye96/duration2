@@ -47,7 +47,7 @@ sns.set_style("ticks",
     )
 
 # Import data frame
-df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/df_fault_dist.csv')
+df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/add_Liu.csv')
 
 # Obtain PGA arithmetic mean values
 pga_arith = df['PGA_arith(cm/s/s)'] # units: cm/s/s
@@ -63,8 +63,8 @@ pga_max = pga_max / sp.g # convert to g
 mag = df['magnitude']
 Vs30 = df['Vs30(m/s)']
 
-# Predict Ia using Liu GMPE
-Liu_Ia = gmpe.get_Liu_array(pga_max, mag, Vs30)
+# Obtain Liu Predictions
+Liu_Ia = df['Liu_Ia']
 
 
 # Get calculated Arias intensity values
@@ -73,10 +73,10 @@ arias_max = df['Ia_max(m/s)']
 
 # Get log of PGA and Arias intensities
 logPGAmax = np.log10(pga_max)
-logLiu = np.log10(Liu_Ia[0])
-logArias = np.log10(arias_max)
+logLiu = np.log10(Liu_Ia)
+logArias = np.log10(arias_arith)
 
-# Plot figure
+# Plot both against pga
 fig = plt.figure(figsize=(10,8))
 ax = fig.add_subplot(111)
 plt.plot(logPGAmax, logLiu, 'ko', label='Liu Prediction')
@@ -86,4 +86,21 @@ plt.xlabel('log(PGA) g')
 plt.legend()
 plt.title('Liu prediction')
 plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_comparison.png', dpi=300)
-#plt.show()
+
+# Plot one against the other
+fig = plt.figure(figsize=(10,8))
+ax = fig.add_subplot(111)
+#plt.plot(Liu_Ia, arias_arith, 'ko')
+plt.plot(logLiu, logArias, 'ko')
+plt.ylabel('Predicted Arias m/s')
+plt.xlabel('Observed Arias m/s')
+plt.title('Liu Observed vs Predicted')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu_comparison2.png', dpi=300)
+
+
+
+
+
+
+
+

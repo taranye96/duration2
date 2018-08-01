@@ -42,8 +42,7 @@ sns.set_style("ticks",
      }
     )
 
-# Import data frame
-df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/add_Trav.csv')
+
 
 # Obtain Vs30 Values
 Vs30 = df['Vs30(m/s)']

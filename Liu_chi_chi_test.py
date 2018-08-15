@@ -23,7 +23,8 @@ import rot_components
 import pga
 
 
-filepath = '/Users/tnye/PROJECTS/Duration/data/events/chi_chi'
+# Path to Chi Chi data
+filepath = '/Users/tnye/PROJECTS/Duration/data/events/usp0009eq0'
 
 # Select all .V2 files for event
 os.chdir(filepath)

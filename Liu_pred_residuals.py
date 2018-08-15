@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 30 13:50:17 2018
+Created on Tue Aug 14 16:15:06 2018
 
 @author: tnye
 """
-
-# Standard library imports
-import os
-os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Third party imports
 import pandas as pd
@@ -44,19 +40,16 @@ sns.set_style("ticks",
 
 
 # Import data frame.
-df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/dataframes/add_Trav.csv')
-
-# Obtain input values from data frame.
+df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/dataframes/add_Liu_pred.csv')
 mag = df['magnitude']
 Vs30 = df['Vs30(m/s)']
-rake = df['rake_angle']
-Rrup = df['rrup']
+rrup = df['rrup']
 
-# Obtain Arias intensity observations.
+# Obtain Arias intensity observations. 
 Ia_obs = df['Ia_arith(m/s)']
 
 # Obtain Arias intensity predictions.
-Ia_pred = df['Trav_Ia']
+Ia_pred = df['Liu_Ia_pred']
 
 # Take log of both sets of Arias intensity. 
 logIa_obs = np.log(Ia_obs)
@@ -71,39 +64,33 @@ residuals = logIa_obs - logIa_pred
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 ax.set_xscale('log')
+ax.set_xlim(90, 1500)
 ax.plot(Vs30, residuals, 'ko')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
-ax.set_xlim(90, 1500)
 ax.set_ylim(-7.5, 7.5)
 ax.set_ylabel('Residuals')
 ax.set_xlabel('Vs30(m/s)')
-ax.set_title('Trav Residuals')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_residuals_vs30.png', dpi=300)
+ax.set_title('Liu Residuals')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu__pred_residuals_vs30.png',
+            dpi=300)
 
-# Rrup
+# Rupture Distance
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 ax.set_xscale('log')
-ax.plot(Rrup, residuals, 'ko')
+ax.plot(rrup, residuals, 'ko')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
-ax.set_xlim(3, 600)
+ax.set_xlim(0, 600)
 ax.set_ylim(-7.5, 7.5)
 ax.set_ylabel('Residuals')
-ax.set_xlabel('Rrup(km)')
-ax.set_title('Trav Residuals')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_residuals_rrup600.png', dpi=300)
+ax.set_xlabel('Rrup')
+ax.set_title('Liu Residuals')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Liu__pred_residuals_rrup600.png',
+            dpi=300)
 
-fig = plt.figure(figsize=(5,4))
-ax = fig.add_subplot(111)
-ax.set_xscale('log')
-ax.plot(Rrup, residuals, 'ko')
-ax.get_xaxis().get_major_formatter().labelOnlyBase = False
-ax.get_yaxis().get_major_formatter().labelOnlyBase = False
-ax.set_xlim(3, 100)
-ax.set_ylim(-7.5, 7.5)
-ax.set_ylabel('Residuals')
-ax.set_xlabel('Rrup(km)')
-ax.set_title('Trav Residuals')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_residuals_rrup100.png', dpi=300)
+
+
+
+    

@@ -45,41 +45,31 @@ sns.set_style("ticks",
     )
 
 
+# Create list of PGA values.
+rrup = np.linspace(1, 100, 250)
 
-# Create list of PGA values
-rdist = np.linspace(1, 100, 250)
+# Define variables.
+vs30 = np.full_like(rrup, 800)
+rake = np.full_like(rrup, 180)
 
-# Define variables
-vs30 = 800
-rake = 180
+# Define Magnitudes.
+mag_1 = np.full_like(rrup, 5.5)
+mag_2 = np.full_like(rrup, 6.5)
+mag_3 = np.full_like(rrup, 7.5)
 
-# Define Magnitudes
-mag_1 = 5.5
-mag_2 = 6.5
-mag_3 = 7.5
-
-# Create list of Arias intensity values 
-Ia_1 = []
-Ia_2 = []
-Ia_3 = []
-
-for i in range(len(rdist)):
-    Ia1 = gmpe.get_Travasarou_single(mag_1, vs30, rake, rdist[i])
-    Ia2 = gmpe.get_Travasarou_single(mag_2, vs30, rake, rdist[i])
-    Ia3 = gmpe.get_Travasarou_single(mag_3, vs30, rake, rdist[i])
-
-    Ia_1.append(Ia1)
-    Ia_2.append(Ia2)
-    Ia_3.append(Ia3)
+# Create list of Arias intensity values. 
+Ia1 = gmpe.get_Travasarou(mag_1, vs30, rake, rrup)
+Ia2 = gmpe.get_Travasarou(mag_2, vs30, rake, rrup)
+Ia3 = gmpe.get_Travasarou(mag_3, vs30, rake, rrup)
  
 # Plot figure
 fig = plt.figure(figsize=(10,8))
 ax = fig.add_subplot(111)
 ax.set_yscale('log')
 ax.set_xscale('log')
-ax.plot(rdist, Ia_1, 'k-', label='Magnitude=5.5')
-ax.plot(rdist, Ia_2, 'r-', label='Magnitude=6.5')
-ax.plot(rdist, Ia_3, 'g-', label='Magnitude=7.5')
+ax.plot(rrup, Ia1, 'k-', label='Magnitude=5.5')
+ax.plot(rrup, Ia2, 'r-', label='Magnitude=6.5')
+ax.plot(rrup, Ia3, 'g-', label='Magnitude=7.5')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
 ax.legend()

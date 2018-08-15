@@ -45,40 +45,31 @@ sns.set_style("ticks",
     )
 
 
+# Create list of PGA values.
+rrup = np.logspace(0, 2, 250)
 
-# Create list of PGA values
-rdist = np.logspace(0, 2, 250)
+# Define variables.
+vs30 = np.full_like(rrup, 180)
+rake = np.full_like(rrup, 180)
 
-# Define variables
-vs30 = np.full_like(rdist, 360)
-rake = np.full_like(rdist, 180)
+# Define Magnitudes.
+mag_1 = np.full_like(rrup, 5.5)
+mag_2 = np.full_like(rrup, 6.5)
+mag_3 = np.full_like(rrup, 7.5)
 
-# Define Magnitudes
-mag_1 = np.full_like(rdist, 5.5)
-mag_2 = np.full_like(rdist, 6.5)
-mag_3 = np.full_like(rdist, 7.5)
+# Calculate Arias intensity.
+Ia1, refIa1, sc1 = gmpe.get_FoulserPiggott(mag_1, vs30, rake, rrup)
+Ia2, refIa2, sc2 = gmpe.get_FoulserPiggott(mag_2, vs30, rake, rrup)
+Ia3, refIa3, sc3 = gmpe.get_FoulserPiggott(mag_3, vs30, rake, rrup)
 
-# Create list of Arias intensity values 
-#Ia_1 = []
-#Ia_2 = []
-#Ia_3 = []
-
-Ia1, refIa1 = gmpe.get_FoulserPiggott(mag_1, vs30, rake, rdist)
-Ia2, refIa2 = gmpe.get_FoulserPiggott(mag_2, vs30, rake, rdist)
-Ia3, refIa3 = gmpe.get_FoulserPiggott(mag_3, vs30, rake, rdist)
-
-#    Ia_1.append(Ia1[0])
-#    Ia_2.append(Ia2[0])
-#    Ia_3.append(Ia3[0])
- 
 # Plot figure
-fig = plt.figure(figsize=(10,8))
+fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 ax.set_yscale('log')
 ax.set_xscale('log')
-ax.plot(rdist, Ia1, 'k-', label='Magnitude=5.5')
-ax.plot(rdist, Ia2, 'r-', label='Magnitude=6.5')
-ax.plot(rdist, Ia3, 'g-', label='Magnitude=7.5')
+ax.plot(rrup, Ia1, 'k-', label='Magnitude=5.5')
+ax.plot(rrup, Ia2, 'r-', label='Magnitude=6.5')
+ax.plot(rrup, Ia3, 'g-', label='Magnitude=7.5')
 ax.get_xaxis().get_major_formatter().labelOnlyBase = False
 ax.get_yaxis().get_major_formatter().labelOnlyBase = False
 ax.legend()
@@ -86,7 +77,7 @@ ax.set_xlim(1, 100)
 ax.set_ylim(0.001, 10)
 ax.set_ylabel('Arias Intensity (m/s)')
 ax.set_xlabel('Rrup(km)')
-ax.set_title('Foulser-Piggott Predictions')
-plt.savefig('/Users/tnye/PROJECTS/Duration/figures/FP_fig9_360.png', dpi=300)
+ax.set_title('FP Fig. 9 (Vs30=180)')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/FP_fig9_180.png', dpi=300)
     
  

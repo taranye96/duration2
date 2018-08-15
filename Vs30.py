@@ -11,99 +11,168 @@ import os
 os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Third party imports 
-import pandas as pd 
+import pandas as pd
+import numpy as np
 
 
-def knet_Vs30(stations, knet_Vs30, vs30_path):
+def knet_Vs30(stations):
     """
-    Obtains Vs30 values from a spreadsheet for a list of knet stations.
-    Stations not listed in the spreadsheet are put into a list. 
+    Obtains Vs30 values from a knet spreadsheet or from a text file of Vs30
+    values extrapolated from geology for a list of knet stations. Stations not
+    listed in the either are added to a spreadsheet for missing Vs30 data. 
 
     Args:
-        filepath (str): Absolute filepath to the earthquake data.
-        knet_Vs30 (csv): Csv of Vs30 values (extrapolated from California) for
-            a list of knet stations. 
-        vs30_path (str): Absolute path to list of vs30 values from geology.
+        stations (array): Array of knet stations. 
            
     Returns:
-        Vs30 (array): Array of Vs30 values for the knet stations. 
+        Vs30 (array): Array of Vs30 values for the knet stations.
 
     """
 
-    # Read in spreadsheet with Vs30 values and convert station names to string.
-    data = pd.read_csv(knet_Vs30, usecols=(['X', 'Y']), sep=",")
+    # Knet spreadsheet
+    knet_vs30 = '/Users/tnye/PROJECTS/Duration/data/Vs30/knet_xtrap.csv'
+    # Vs30 from geology textfile
+    geo_vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/japan_map/geo_vs30'
+    # Spreadsheet with station names missing Vs30 data
+    missing_vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/missing_vs30.csv'
+
+    # Read in spreadsheet with knet Vs30 values and convert station names to string.
+    data = pd.read_csv(knet_vs30, usecols=(['X', 'Y']), sep=",")
     datavals = data.values
     names = []
     for i in range(len(datavals)):
         names.append(datavals[i][0])
     names_str = ','.join(names)
 
+    # Obtain list of vs30 values extrapolated from geology and convert to string.
     geo_vs30 = []
-    with open(vs30_path) as f:
+    with open(geo_vs30_path) as f:
         lines = f.readlines()
     for i in range(len(lines)):
         lines[i] = lines[i].split('\t')
         geo_vs30.append((lines[i][2], float(lines[i][3])))
-    
-    Vs30 = []
-    special_files = []
-    for station in stations:   
-        stn_name = station[0].stats.station
-        lat = station[0].stats.knet.stla
-        lon = station[0].stats.knet.stlo
+    geo_names = []
+    for i in range(len(lines)):
+        geo_names.append(lines[i][2])
+    geo_names_str = ','.join(geo_names)
 
-        # Remove files that are not in spreadsheet.
+    # Read in spreadsheet of missing Vs30 values and convert to string. 
+    df = pd.read_csv(missing_vs30_path)
+    missingvals = df.values
+    missing_names = []
+    for i in range(len(missingvals)):
+        missing_names.append(missingvals[i][0])
+    missing_names_str = ','.join(missing_names)
+    
+    # Obtain Vs30 values for stations.
+    Vs30 = []
+    stn_names = []
+    stn_lats = []
+    stn_lons = []
+
+    for sta in stations:   
+        stn_name = sta[0].stats.station
+        lat = sta[0].stats.coordinates['latitude']
+        lon = sta[0].stats.coordinates['longitude']
+
+        # Search for station data in knet spreadsheet.
         if stn_name in names_str:
 
             # Select Vs30 values from spreadsheet that match the station names.
-            for i in range(len(datavals)):
-                if datavals[i][0] == stn_name:
-                    Vs30.append(datavals[i][1])
+            for data in datavals:
+                if data[0] == stn_name:
+                    for i in range(len(sta)):
+                        sta[i].stats.vs30 = data[1]
+                    Vs30.append(data[1])
+
+        # Search for station data in geoVs30 file. 
+        elif stn_name in geo_names_str:
+
+            # Select Vs30 values from geoVs30 data that match the station names.
+            for data in geo_vs30:
+                if data[0] == stn_name:
+                    for i in range(len(sta)):
+                        sta[i].stats.vs30 = data[1]
+                    Vs30.append(data[1])
+
+        # Add station information to spreadsheet for missing vs30 data.  
         else:
-#            special_files.append((stn_name, lat, lon))
-#            Vs30.append('Nan')
-            for i in range(len(geo_vs30)):
-                    if geo_vs30[i][0] == stn_name:
-                        Vs30.append(geo_vs30[i][1])
+            Vs30.append(np.nan)
+            if stn_name in missing_names_str:
+                pass
+            else:
+                stn_names.append(stn_name)
+                stn_lats.append(lat)
+                stn_lons.append(lon)
+                
+    missing_data = {'Station': stn_names, 'Station_lat': stn_lats,
+                                'Station_lon': stn_lons}
+    dfnew = pd.DataFrame(missing_data)
+    dfconcat = pd.concat([df, dfnew], sort=True)
+    columns = ['Station', 'Station_lat', 'Station_lon']
+    
+    dfconcat.to_csv(missing_vs30_path, index=False, columns=columns)
+                
 
-    return(Vs30, special_files)
+    return(Vs30)
 
 
-def kik_Vs30(stations, profile_path, vs30_path):
+def kik_Vs30(stations):
     """
-    Calculates Vs30 values for a list Kik-net stations.  Stations without a
-    profile or with unusable data are put into a list. 
+    Calculates Vs30 values for a list Kik-net stations using a KIKnet profile.
+    Stations without a profile will search for Vs30 value from a list of Vs30
+    values extrapolated from geology.  If station is not in this list, it is
+    added to a spreadsheet for missing Vs30 data. 
     
     Args:
-        station (stream): Stream of Kik-net stations.
-        profile_path (str): Absolute path to Kik-net profiles.
-        vs30_path (str): Absolute path to list of vs30 values from geology.
+        stations (array): Array of Kik-net stations.
+
     Returns:
-        Vs30 (float): Average velocity for the top 30 m. 
-        special_files (stream): Stream of stations that do not have a kik
-            profile or have unusable data.
+        Vs30 (array): Array of Vs30 values for the KIKnet stations. 
 
     """
-        
+
+    # KIKnet velocity profiles 
+    profile_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/kik_profiles/'
+    # Vs30 from geology textfile
+    geo_vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/japan_map/geo_vs30'
+    # Spreadsheet with station names missing Vs30 data
+    missing_vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/missing_vs30.csv'
+
+    # Obtain list of vs30 values extrapolated from geology and convert to string.
     geo_vs30 = []
-    with open(vs30_path) as f:
+    with open(geo_vs30_path) as f:
         lines = f.readlines()
     for i in range(len(lines)):
         lines[i] = lines[i].split('\t')
         geo_vs30.append((lines[i][2], float(lines[i][3])))
-         
-    
-    special_files = []
+    geo_names = []
+    for i in range(len(lines)):
+        geo_names.append(lines[i][2])
+    geo_names_str = ','.join(geo_names)
+
+    # Read in spreadsheet of missing Vs30 values and convert to string. 
+    df = pd.read_csv(missing_vs30_path)
+    missingvals = df.values
+    missing_names = []
+    for i in range(len(missingvals)):
+        missing_names.append(missingvals[i][0])
+    missing_names_str = ','.join(missing_names)
+
+    # Obtain Vs30 values for stations.  
     Vs30 = []
-    for station in stations:   
-        stn_name = station[0].stats.station
-        lat = station[0].stats.knet.stla
-        lon = station[0].stats.knet.stlo
+    stn_names = []
+    stn_lats = []
+    stn_lons = []
+    for sta in stations:   
+        stn_name = sta[0].stats.station
+        lat = sta[0].stats.coordinates['latitude']
+        lon = sta[0].stats.coordinates['longitude']
         type_file = '.dat'
         file = stn_name + type_file
         filepath = profile_path + file
     
-        # Check to see kik-profile exists
+        # Check to see if kik-profile exists
         if os.path.exists(profile_path + file)==True:
     
             # Read kik profiles
@@ -116,19 +185,49 @@ def kik_Vs30(stations, profile_path, vs30_path):
             Thickness = []
             x = len(lines)
     
-            # Remove files that have missing or 0 velocity data
+            # Remove files that have missing velocity data.
             if lines[2][30:].replace(' ', '') == '\n':
-    #                special_files.append((stn_name, lat, lon))
-    #                Vs30.append('Nan')
-                for i in range(len(geo_vs30)):
-                    if geo_vs30[i][0] == stn_name:
-                        Vs30.append(geo_vs30[i][1])
+
+                # Select Vs30 values from geoVs30 data that match the station names.
+                if stn_name in geo_names_str:
+                    for data in geo_vs30:
+                        if data[0] == stn_name:
+                            for i in range(len(sta)):
+                                sta[i].stats.vs30 = data[1]
+                            Vs30.append(data[1])
+
+                # Add station information to spreadsheet for missing vs30 data.  
+                else:
+                    Vs30.append(np.nan)
+                    if stn_name in missing_names_str:
+                        pass
+                    else:
+                        stn_names.append(stn_name)
+                        stn_lats.append(lat)
+                        stn_lons.append(lon)
+
+            # Remove files that have 0 velocity data. 
             elif float(lines[2][30:].replace(' ', '')) == 0:
-    #                special_files.append((stn_name, lat, lon))
-    #                Vs30.append('Nan')
-                for i in range(len(geo_vs30)):
-                    if geo_vs30[i][0] == stn_name:
-                        Vs30.append(geo_vs30[i][1])
+
+                # Select Vs30 values from geoVs30 data that match the station names.
+                if stn_name in geo_names_str:
+                    for data in geo_vs30:
+                        if data[0] == stn_name:
+                            for i in range(len(sta)):
+                                sta[i].stats.vs30 = data[1]
+                            Vs30.append(data[1])
+
+                # Add station information to spreadsheet for missing vs30 data.  
+                else:
+                    Vs30.append(np.nan)
+                    if stn_name in missing_names_str:
+                        pass
+                    else:
+                        stn_names.append(stn_name)
+                        stn_lats.append(lat)
+                        stn_lons.append(lon)
+
+            # Calculate Vs30 values
             else:
                 for i in range(len(lines)):
                     if i >= 2 and i != (x - 1):
@@ -139,7 +238,6 @@ def kik_Vs30(stations, profile_path, vs30_path):
                         Depth.append(depth)
                         Velocity.append(velocity)
     
-                # Calculate Vs30
                 if Depth[0] <= 30:
                     time=0
                     for i in range(len(Depth)):
@@ -156,10 +254,86 @@ def kik_Vs30(stations, profile_path, vs30_path):
                     vs30 = Velocity[0]
                     Vs30.append(vs30)
         else:
-    #            special_files.append((stn_name, lat, lon))
-    #            Vs30.append('Nan')
-            for i in range(len(geo_vs30)):
-                    if geo_vs30[i][0] == stn_name:
-                        Vs30.append(geo_vs30[i][1])
+            
+            # Select Vs30 values from geoVs30 data that match the station names.
+            if stn_name in geo_names_str:
+                for data in geo_vs30:
+                    if data[0] == stn_name:
+                        for i in range(len(sta)):
+                            sta[i].stats.vs30 = data[1]
+                        Vs30.append(data[1])
 
-    return(Vs30, special_files)
+            # Add station information to spreadsheet for missing vs30 data.
+            else:
+                    Vs30.append(np.nan)
+                    if stn_name in missing_names_str:
+                        pass
+                    else:
+                        stn_names.append(stn_name)
+                        stn_lats.append(lat)
+                        stn_lons.append(lon)
+
+    missing_data = {'Station': stn_names, 'Station_lat': stn_lats,
+                                'Station_lon': stn_lons}
+    dfnew = pd.DataFrame(missing_data)
+    dfconcat = pd.concat([df, dfnew], sort=True)
+    columns = ['Station', 'Station_lat', 'Station_lon']
+    
+    dfconcat.to_csv(missing_vs30_path, index=False, columns=columns)
+
+    return(Vs30)
+
+
+def misc(stations):
+    """
+    Adds station data to a spreadsheet for missing Vs30 data for non KIKnet or
+    knet stations.
+
+    Args:
+        stations (array): Array of knet stations. 
+           
+    Returns:
+        Vs30 (array): Array of NaN values the size of stations. 
+
+    """
+
+    # Spreadsheet with station names missing Vs30 data
+    missing_vs30_path = '/Users/tnye/PROJECTS/Duration/data/Vs30/missing_vs30.csv'
+
+    # Read in spreadsheet of missing Vs30 values and convert to string. 
+    df = pd.read_csv(missing_vs30_path)
+    missingvals = df.values
+    missing_names = []
+    for i in range(len(missingvals)):
+        missing_names.append(missingvals[i][0])
+    missing_names_str = ','.join(missing_names)
+    
+    # Obtain Vs30 values for stations.
+    Vs30 = []
+    stn_names = []
+    stn_lats = []
+    stn_lons = []
+
+    for sta in stations:   
+        stn_name = sta[0].stats.station
+        lat = sta[0].stats.coordinates['latitude']
+        lon = sta[0].stats.coordinates['longitude']
+
+        Vs30.append(np.nan)
+        if stn_name in missing_names_str:
+            pass
+        else:
+            stn_names.append(stn_name)
+            stn_lats.append(lat)
+            stn_lons.append(lon)
+                
+    missing_data = {'Station': stn_names, 'Station_lat': stn_lats,
+                                'Station_lon': stn_lons}
+    dfnew = pd.DataFrame(missing_data)
+    dfconcat = pd.concat([df, dfnew], sort=True)
+    columns = ['Station', 'Station_lat', 'Station_lon']
+    
+    dfconcat.to_csv(missing_vs30_path, index=False, columns=columns)
+                
+
+    return(Vs30)

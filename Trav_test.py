@@ -12,7 +12,6 @@ os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Third party imports
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -42,31 +41,57 @@ sns.set_style("ticks",
      }
     )
 
+# Read in data frame. 
+df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/dataframes/add_Trav.csv')
 
-
-# Obtain Vs30 Values
+# Obtain Vs30 Values.
 Vs30 = df['Vs30(m/s)']
 Rrup = df['rrup']
 
-# Obtain observed Arias intensity values
+# Obtain observed Arias intensity values.
 Ia_obs = df['Ia_arith(m/s)']
 
-# Get predicted Arias intensity values
+# Get predicted Arias intensity values.
 Ia_pred = df['Trav_Ia']
 
-# Get log of Arias intensities and Vs30 values
-logVs30 = np.log10(Vs30)
-logFP = np.log10(Ia_pred)
-logArias = np.log10(Ia_obs)
-logRrup = np.log10(Rrup)
-
 # Plot figure
-fig = plt.figure(figsize=(10,8))
+fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
-plt.plot(logVs30, logFP, 'ko', label='FP Prediction')
-plt.plot(logVs30, logArias, 'r^', label='observed Arias')
-plt.ylabel('log(Ia) m/s')
-plt.xlabel('log(Vs30) (m/s)')
+ax.set_xscale('log')
+ax.set_yscale('log')
+plt.plot(Vs30, Ia_pred, 'ko', label='FP Prediction')
+plt.plot(Vs30, Ia_obs, 'r^', label='observed Arias')
+plt.ylabel('Arias Intensity m/s')
+plt.xlabel('Vs30 m/s')
 plt.legend()
 plt.title('Observations vs Trav predictions')
 plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_comparison_vs30.png', dpi=300)
+
+fig = plt.figure(figsize=(5,4))
+ax = fig.add_subplot(111)
+ax.set_xscale('log')
+ax.set_yscale('log')
+plt.plot(Rrup, Ia_pred, 'ko', label='FP Prediction')
+plt.plot(Rrup, Ia_obs, 'r^', label='observed Arias')
+plt.ylabel('Arias Intensity m/s')
+plt.xlabel('Rrup km')
+plt.legend()
+plt.title('Observations vs Trav predictions')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_comparison_rrup.png', dpi=300)
+
+# Plot one against the other
+x = [10E-7, 10]
+y = x
+
+fig = plt.figure(figsize=(5,4))
+ax = fig.add_subplot(111)
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlim(10E-7, 10)
+ax.set_ylim(10E-7, 10)
+plt.plot(Ia_obs, Ia_pred, 'ko')
+plt.plot(x, y, 'r-')
+plt.ylabel('Predicted Arias m/s')
+plt.xlabel('Observed Arias m/s')
+plt.title('Travasarou Predicted vs Observed')
+plt.savefig('/Users/tnye/PROJECTS/Duration/figures/Trav_comparison.png', dpi=300)

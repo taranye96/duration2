@@ -47,7 +47,7 @@ def get_arias_intensity(acc, dt, starttime):
 
 def get_time_from_percent(NIa, p, dt):
     """
-    Find the closest value to the desired percent of Arias intensity and
+    Find the closest value to the desired %Arias intensity and
     calculate the duration time associated with the percent.
 
     Args:
@@ -76,6 +76,7 @@ def get_time_for_duration_parameters(NIa, dt, p1, p2):
     Args:
         NIa (array): Array of normalized Arias intensity values with respect to
             time.
+        dt (float): Time in between each record in s.
         p1 (float): Lower boundary of %Arias itensity range.
         p2 (float): Upper boundary of %Arias intensity range.
 

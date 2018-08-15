@@ -18,29 +18,43 @@ import scipy.constants as sp
 # Local imports
 import gmpe
 
-# Import data frame
-df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/df_fault_dist.csv')
 
-# Obtain PGA arithmetic mean values
+# Import data frame.
+df = pd.read_csv('/Users/tnye/PROJECTS/Duration/data/dataframes/add_FP.csv')
+
+# Obtain PGA arithmetic mean values.
 pga_arith = df['PGA_arith(cm/s/s)'] # units: cm/s/s
 pga_arith = np.multiply(pga_arith, 0.01) # convert to m/s/s
 pga_arith = pga_arith / sp.g # convert to g
 
-# Obtain PGA greater of two horizontals
+# Obtain PGA greater of two horizontals.
 pga_max = df['PGA_max(cm/s/s)'] # units: cm/s/s    
 pga_max = pga_max * 0.01 # convert to m/s/s
 pga_max = pga_max / sp.g # convert to g
 
-# Obtain magnitudes and Vs30 values
+# Obtain magnitudes and Vs30 values.
 mag = df['magnitude']
 Vs30 = df['Vs30(m/s)']
 
-# Predict Ia using Liu GMPE
-Liu_Ia, Sig, Tau, Sig_t = gmpe.get_Liu_array(pga_max, mag, Vs30)
+# Predict Ia using Liu GMPE.
+Liu_Ia, sc = gmpe.get_Liu(pga_max, mag, Vs30)
 
-# Add column for Liu predictions to data frame
+# Flatten lists of sigma constants.
+flatSig = [item for sublist in sc[0] for item in sublist]
+flatTau = [item for sublist in sc[1] for item in sublist]
+flatSig_t = [item for sublist in sc[2] for item in sublist]
+
+# Calculate residuals.
+Ia_obs = np.array(df['Ia_arith(m/s)'])
+logIa_obs = np.log(Ia_obs)
+logIa_pred = np.log(Liu_Ia)
+residuals = logIa_obs - logIa_pred
+
+# Add column for Liu predictions and residuals to data frame.
 df['Liu_Ia'] = Liu_Ia
-df['Liu_Sig'] = Sig[0]
-df['Liu_Tau'] = Tau[0]
-df['Liu_Sig_t'] = Sig_t[0]
-df.to_csv('/Users/tnye/PROJECTS/Duration/data/add_Liu.csv')
+df['Liu_Sig'] = flatSig
+df['Liu_Tau'] = flatTau
+df['Liu_Sig_t'] = flatSig_t
+df['Liu_res'] = residuals
+
+df.to_csv('/Users/tnye/PROJECTS/Duration/data/dataframes/add_Liu.csv')

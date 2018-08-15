@@ -7,13 +7,14 @@ Created on Thu Jun 28 11:52:15 2018
 """
 
 # Third party imports
-from libcomcat.search import get_event_by_id
-from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
-from obspy.taup import TauPyModel
-from obspy import Stream, UTCDateTime
 import matplotlib.pyplot as plt
 from matplotlib.dates import date2num
-# from matplotlib.pyplot import close
+from obspy import Stream, UTCDateTime
+from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
+from obspy.taup import TauPyModel
+
+# Local imports
+from libcomcat.search import get_event_by_id
 
 
 def get_earthquake_data(event_id, stations):
@@ -28,13 +29,15 @@ def get_earthquake_data(event_id, stations):
 
     Returns:
         event_id (str): USGS event id for a specific earthquake.
-        date (time?): UTC date.time origin for source
+        date (time): UTC date.time origin for source
         mag (float): Magnitude of earthquake.
         source_lat (float): Source latitude.
         source_lon (float): Source longitude.
         depth (float): Depth of earthquake origin in km.
+        rake (flaot): Rake angle. 
     """
 
+    # Get event info using libcomcat. 
     detail = get_event_by_id(event_id)
     date = UTCDateTime(detail.time)
     mag = detail.magnitude
@@ -42,15 +45,19 @@ def get_earthquake_data(event_id, stations):
     source_lon = detail.longitude
     depth = detail.depth
 
-    # Add event stats to each trace in each station
+    # Add event stats to each trace in each station.
     for sta in stations:
+
         for i in range(len(sta)):
             trace = sta[i]
+
             eventID = event_id
             magnitude = mag
             source_depth = depth
             event_lat = source_lat
             event_lon = source_lon
+
+            # Search for rake angle using libcomcat. 
             if detail.hasProduct('moment-tensor'):
                 tensor = detail.getProducts('moment-tensor')[0]
                 if tensor.hasProperty('nodal-plane-1-rake'):
@@ -76,7 +83,7 @@ def get_earthquake_data(event_id, stations):
     return (event_id, date, mag, source_lat, source_lon, depth, rake)
 
 
-def get_dist_and_parrivals(stations, station_stats, depth):
+def get_dist_and_parrivals(stations, depth):
     """
     Calculate distance between the source and each station for an event and
     the theoretical p-wave arrival times and appends them to the station stats.
@@ -84,23 +91,24 @@ def get_dist_and_parrivals(stations, station_stats, depth):
     Args:
         stations (array): Combined streams of acceleration data for
             each station.
-        station_stats (list): List of lat and lon coordinates for event.
         depth (float): Depth of earthquake origin in km.
 
     Returns:
     """
 
+    # Define TauPyModel. 
     model = TauPyModel(model="iasp91")
+
     for sta in stations:
         for i in range(len(sta)):
             trace = sta[i]
 
             # Compute distance.
             dist_az_baz = gps2dist_azimuth(
-                    trace.stats['knet']['stla'],
-                    trace.stats['knet']['stlo'],
-                    trace.stats['knet']['evla'],
-                    trace.stats['knet']['evlo'])
+                    trace.stats.coordinates['latitude'],
+                    trace.stats.coordinates['longitude'],
+                    trace.stats.source_lat,
+                    trace.stats.source_lon)
             distance_meters = dist_az_baz[0]
             distance_km = distance_meters/1000.0
             dd = kilometers2degrees(distance_km)

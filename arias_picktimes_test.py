@@ -8,36 +8,38 @@ Created on Fri Jul  6 11:03:22 2018
 
 # Standard library imports
 import os 
+os.chdir('/Users/tnye/PROJECTS/Duration/code')
 
 # Third party imports
 import numpy as np
 from obspy.core.stream import Stream
 import matplotlib.pyplot as plt
 
-os.chdir('/Users/tnye/PROJECTS/Duration/code')
-
 # Local imports
 import read_seismic
 import calc_eq_data
 import arias_intensity
 
+
+# Path to acceleration files. 
 filepath = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt'
-filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/ground_motion/knt/knt2007.csv'
+# Path to list of stations
+filt_stns = '/Users/tnye/PROJECTS/Duration/data/usp000fg9t/select_stations/knt.csv'
 
 
 # Read knet data.
 stations, station_stats = read_seismic.get_knet_data(filepath, filt_stns)
 
-# Get source data.
+# Get event data.
 event_id, date, mag, source_lat, source_lon, depth = calc_eq_data.get_earthquake_data(
         'usp000fg9t', stations)
 
-# Add distance and P_wave arrival times to stats
+# Add distance and P_wave arrival times to stats.
 calc_eq_data.get_dist_and_parrivals(stations, station_stats, source_lat,
                                     source_lon, depth)
 
 
-# Calc Arias intensity and add to stats
+# Calc Arias intensity and add to stats.
 dt = 0.01
 for sta in stations:
     for i in range(len(sta)):

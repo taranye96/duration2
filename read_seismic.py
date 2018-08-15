@@ -16,8 +16,100 @@ from amptools.stream import group_channels
 import pandas as pd
 
 # Local imports
-import processing
+#import processing
+from amptools.io.read import read_data
 
+
+def get_station_data(event, data_type):
+    """
+    Reads in seismic data, groups by station, and creates a list of station
+    stats. 
+
+    Args:
+        event (str): USGS event ID. 
+        data_type (str): Seismic data format.  
+                         Options are: 
+                            knt
+                            kik
+                            smc
+                            V2_V3
+
+    Returns:
+        stations (array): Combined streams of acceleration data for each station.
+        station_stats (list): Name, lat, lon, and elevation for each station.
+        
+    """
+
+    # Define filepath and selected stations to use (if there are any).
+    filepath = os.path.join('/Users/tnye/PROJECTS/Duration/data/events',
+                            event, 'ground_motion', data_type)
+    select_stns = os.path.join('/Users/tnye/PROJECTS/Duration/data/events',
+                               event, 'select_stations', data_type + '.csv')
+
+    os.chdir(filepath)
+
+    # Select acceleration files and combine into a list.
+    files_grabbed = []
+
+    if data_type == 'knt':
+        types = ('*.EW', '*.NS', '*.UD')
+        for files in types:
+            files_grabbed.extend(glob.glob(files))
+    elif data_type == 'kik':
+        types = ('*.EW2', '*.NS2', '*.UD2')
+        for files in types:
+            files_grabbed.extend(glob.glob(files))
+    elif data_type == 'smc':
+        types = ('*a.smc')
+        for file in glob.glob(types):
+            files_grabbed.append(file)
+    elif data_type == 'v2':
+        types = ('*.V2')
+        for file in glob.glob(types):
+            files_grabbed.append(file)
+
+    # Read files using Amptools.
+    data = []
+    try:
+        for i in range(len(files_grabbed)):
+            data.append(read_data(files_grabbed[i]))
+    except:
+            print('Bad file', files_grabbed[i])
+        
+
+    # Filter out stations with poor records using a dataframe of pre-selected
+    # station names for knet and kiknet events.
+    names = pd.read_csv(select_stns, usecols=(['X']), sep=",")
+    names_list = names.to_string(index=False)
+    filtered_files = []
+    for st in data:
+        for i in range(len(st)):
+            trace = st[i]
+            if trace.stats.station in names_list:
+                filtered_files.append([trace])
+    data = filtered_files
+
+    # Group all acceleration files by station if they are not already grouped.
+    if len(data[0]) == 3:
+        stations = data
+    else:
+        stations = group_channels(data)
+
+    # Obtain stats for each station using the stats from the first trace
+        # Also add station type to stats 
+        # (read does not distinguish between knet and kik)
+    station_stats = []
+    for sta in stations:
+        for i in range(len(sta)):
+            trace = sta[0]
+            stn_type = trace.stats.standard['source_format']
+            name = trace.stats['station']
+            station_lat = trace.stats.coordinates['latitude']
+            station_lon = trace.stats.coordinates['longitude']
+            elev = trace.stats.coordinates['elevation']
+            station_stats.append([stn_type, name, station_lat, station_lon, elev])
+
+    return(stations, station_stats)
 
 
 def get_knt_data(filepath, filtered_stations):
@@ -172,46 +264,4 @@ def get_kik_data(filepath, filtered_stations):
             trace.stats.calib = 1
 
     return (stations, station_stats)
-
-
-def get_USC_data(filepath):
-    """
-    Reads a USC file for an earthquake with horizontal and vertical components
-    of acceleration, gathers it into 1 stream per station, and give station
-    stats.
-
-    Args:
-        filepath (str): Absolute filepath to the earthquake data
-
-    Returns:
-        stations (array): Combined streams of acceleration data for
-            each station.
-        station_stats (list): Name, lat, and lon coordinates for each station.
-    """
-
-    # Obtain only the acceleration files.
-    # .n0a and .n0c are horizontal and .n0b is vertical.
-    os.chdir(filepath)
-    types = ('*.n0a', '*.n0b', '*.n0c')
-    files_grabbed = []
-    for files in types:
-        files_grabbed.extend(glob.glob(files))
-
-    # Read in data
-    data = []
-    for i in range(len(files_grabbed)):
-        data.append(processing.read_data(files_grabbed[i], units='acc'))
-    
-    # Group data by station
-    stations = group_channels(data)
-    
-    # Obtain stats for each station using the stats from the first trace
-    station_stats = []
-    
-    
-    
-    
-    
-    
-    
     

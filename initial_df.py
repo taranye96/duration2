@@ -6,6 +6,7 @@ Created on Fri Jun 22 15:09:28 2018
 @author: tnye
 """
 
+# Third party imports
 import pandas as pd
 from collections import OrderedDict
 
@@ -25,5 +26,5 @@ data = OrderedDict([('USGS_eventID', []), ('magnitude', []), ('depth(km)', []),
 
 df = pd.DataFrame(data)
 
-filepath = '/Users/tnye/PROJECTS/Duration/data/duration_data.csv'
+filepath = '/Users/tnye/PROJECTS/Duration/data/initial_df.csv'
 df.to_csv(filepath, index=False)

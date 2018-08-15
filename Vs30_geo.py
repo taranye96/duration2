@@ -13,4 +13,4 @@ data = OrderedDict([('Station', []), ('Coordinates', [])])
 
 df = pd.DataFrame(data)
 
-df.to_csv('Vs30_geo.csv', index=False)
+df.to_csv('/Users/tnye/PROJECTS/Duration/data/Vs30_geo.csv', index=False)

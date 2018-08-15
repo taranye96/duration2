@@ -148,31 +148,25 @@ def get_FoulserPiggott(mag, Vs30, rake, rrup, heteroskedastic=True):
 
 
     # Calculate Ia mean.
-    FP_Ia_mean = []
     refIa = []
-    for i in range(len(rake)):
-        if rake[i] >= 45 and rake[i] <= 135:
-            FRV = 1
-        else:
-            FRV = 0
-
-        lnIa_ref = \
-            c1 + \
-            (c2 * (8.5 - mag[i])**2) + \
-            ((c3 + (c4 * mag[i])) *
-                np.log(np.sqrt(rrup[i]**2 + c5**2))) + \
-            (c6 * FRV)
-        
-        Ia_ref = np.exp(lnIa_ref)
-        refIa.append(Ia_ref)
-
-        f_site = ((v1 * np.log(Vs30[i]/Vref)) + 
-                  (v2 * (np.exp(v3 * (min(Vs30[i], 1100) - V1)) - 
-                         np.exp(v3 * (Vref - V1))) * 
-                   np.log((Ia_ref + v4) / v4)))
-
-        Ia = np.exp(lnIa_ref + f_site)
-        FP_Ia_mean.append(Ia)
+    FRV = np.array((rake >=45) & (rake <= 135), dtype=int)
+    
+    lnIa_ref = \
+        c1 + \
+        (c2 * (8.5 - mag)**2) + \
+        ((c3 + (c4 * mag)) *
+            np.log(np.sqrt(rrup**2 + c5**2))) + \
+        (c6 * FRV)
+    
+    Ia_ref = np.exp(lnIa_ref)
+    refIa.append(Ia_ref)
+    
+    f_site = ((v1 * np.log(Vs30/Vref)) + 
+              (v2 * (np.exp(v3 * (np.minimum(Vs30, 1100) - V1)) - 
+                     np.exp(v3 * (Vref - V1))) * 
+               np.log((Ia_ref + v4) / v4)))
+    
+    FP_Ia_mean = np.exp(lnIa_ref + f_site)
     
     sc = (d1, d2, d3, SigE, SigA)
 
